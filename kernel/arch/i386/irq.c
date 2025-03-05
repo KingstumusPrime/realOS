@@ -1,9 +1,10 @@
-#include <stdint.h>
 #include <kernel/pic.h>
-#include <stdio.h>
-#include <kernel/idt.h>
 #include <kernel/inline.h>
-#include <kernel/irq.h>
+#include <kernel/idt.h>
+#include <kernel/pit.h>
+#include <kernel/keyboard.h>
+#include <stdio.h>
+#include <kernel/ata.h>
 
 extern void irq0();
 extern void irq1();
@@ -21,70 +22,76 @@ extern void irq12();
 extern void irq13();
 extern void irq14();
 extern void irq15();
+extern void irq128();
 
-/* We first remap the interrupt controllers, and then we install
-*  the appropriate ISRs to the correct entries in the IDT. This
-*  is just like installing the exception handlers */
-void irq_install()
+void *irq_routines[16] =
 {
-    PIC_remap(32, 39);
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0
+};
 
-    idt_set_gate(32, (unsigned)irq0, 0x08, 0x8E);
-    idt_set_gate(33, (unsigned)irq1, 0x08, 0x8E);
-    idt_set_gate(34, (unsigned)irq2, 0x08, 0x8E);
-    idt_set_gate(35, (unsigned)irq3, 0x08, 0x8E);
-    idt_set_gate(36, (unsigned)irq4, 0x08, 0x8E);
-    idt_set_gate(37, (unsigned)irq5, 0x08, 0x8E);
-    idt_set_gate(38, (unsigned)irq6, 0x08, 0x8E);
-    idt_set_gate(39, (unsigned)irq7, 0x08, 0x8E);
-    idt_set_gate(40, (unsigned)irq8, 0x08, 0x8E);
-    idt_set_gate(41, (unsigned)irq9, 0x08, 0x8E);
-    idt_set_gate(42, (unsigned)irq10, 0x08, 0x8E);
-    idt_set_gate(43, (unsigned)irq11, 0x08, 0x8E);
-    idt_set_gate(44, (unsigned)irq12, 0x08, 0x8E);
-    idt_set_gate(45, (unsigned)irq13, 0x08, 0x8E);
-    idt_set_gate(46, (unsigned)irq14, 0x08, 0x8E);
-    idt_set_gate(47, (unsigned)irq15, 0x08, 0x8E);
+void install_handler(int n, void (*func)(struct regs *r)){
+    irq_routines[n] = func;
 }
 
-/* Each of the IRQ ISRs point to this function, rather than
-*  the 'fault_handler' in 'isrs.c'. The IRQ Controllers need
-*  to be told when you are done servicing them, so you need
-*  to send them an "End of Interrupt" command (0x20). There
-*  are two 8259 chips: The first exists at 0x20, the second
-*  exists at 0xA0. If the second controller (an IRQ from 8 to
-*  15) gets an interrupt, you need to acknowledge the
-*  interrupt at BOTH controllers, otherwise, you only send
-*  an EOI command to the first controller. If you don't send
-*  an EOI, you won't raise any more IRQs */
+
+void PIT_install(){
+    PIT_config(1000);
+    install_handler(0, PIT_handler);   
+}
+
+void keyboard_install(){
+    install_handler(1, keyboard_handler);   
+}
 
 
-struct regs
-{
-    unsigned int gs, fs, es, ds;      /* pushed the segs last */
-    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;  /* pushed by 'pusha' */
-    unsigned int int_no, err_code;    /* our 'push byte #' and ecodes do this */
-    unsigned int eip, cs, eflags, useresp, ss;   /* pushed by the processor automatically */ 
-};
+void ata_install(){
+    ata_init();
+    install_handler(0xE, ata_handler);   
+}
+
+
+void irq_install(){
+    PIC_remap(32, 40);
+
+    idt_set_gate(0x20, (unsigned)irq0, 0x08, 0x8E);
+    idt_set_gate(0x21, (unsigned)irq1, 0x08, 0x8E);
+    idt_set_gate(0x22, (unsigned)irq2, 0x08, 0x8E);
+    idt_set_gate(0x23, (unsigned)irq3, 0x08, 0x8E);
+
+    idt_set_gate(0x24, (unsigned)irq4, 0x08, 0x8E);
+    idt_set_gate(0x25, (unsigned)irq5, 0x08, 0x8E);
+    idt_set_gate(0x26, (unsigned)irq6, 0x08, 0x8E);
+    idt_set_gate(0x27, (unsigned)irq7, 0x08, 0x8E);
+
+    idt_set_gate(0x28, (unsigned)irq8, 0x08, 0x8E);
+    idt_set_gate(0x29, (unsigned)irq9, 0x08, 0x8E);
+    idt_set_gate(0x2A, (unsigned)irq10, 0x08, 0x8E);
+    idt_set_gate(0x2B, (unsigned)irq11, 0x08, 0x8E);
+
+    idt_set_gate(0x2C, (unsigned)irq12, 0x08, 0x8E);
+    idt_set_gate(0x2D, (unsigned)irq13, 0x08, 0x8E);
+    idt_set_gate(0x2E, (unsigned)irq14, 0x08, 0x8E);
+    idt_set_gate(0x2F, (unsigned)irq15, 0x08, 0x8E);
+
+    idt_set_gate(0x80, (unsigned)irq128, 0x08, 0xEE);
+
+    PIT_install();
+    //keyboard_install();
+    ata_install();
+}
+
+char l[30] = "0123456789ABCDEF";
 
 void irq_handler(struct regs *r)
 {
-    /* This is a blank function pointer */
     void (*handler)(struct regs *r);
+    handler = irq_routines[(r->int_no - 0x20)];
+    if(handler){
+        handler(r);
 
-    /* Find out if we have a custom handler to run for this
-    *  IRQ, and then finally, run it */
-    printf("interrupt");
-    /* If the IDT entry that was invoked was greater than 40
-    *  (meaning IRQ8 - 15), then we need to send an EOI to
-    *  the slave controller */
-    if (r->int_no >= 40)
-    {
-        outb(0xA0, 0x20);
+    }else{
+        printf("INTERRUPTS %c", l[(r->int_no - 0x20)]);
     }
-
-    /* In either case, we need to send an EOI to the master
-    *  interrupt controller too */
-    outb(0x20, 0x20);
+    PIC_sendEOI((r->int_no - 0x20));
 }
-	

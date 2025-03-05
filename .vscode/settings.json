@@ -3,6 +3,11 @@
         "*.embeddedhtml": "html",
         "stdio.h": "c",
         "stdint.h": "c",
-        "stddef.h": "c"
+        "stddef.h": "c",
+        "string.h": "c",
+        "stdbool.h": "c",
+        "ctype.h": "c",
+        "limits.h": "c",
+        "stdlib.h": "c"
     }
 }
