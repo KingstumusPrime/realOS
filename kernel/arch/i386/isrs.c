@@ -65,5 +65,5 @@ void fault_handler(struct regs *r)
 {
     printf("ERROR! ");
     printf("FAULT: %s", messages[r->int_no]);
-    for(;;);
+    abort();
 }

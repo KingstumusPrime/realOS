@@ -1,3 +1,4 @@
+# irq
 .global irq0
 .global irq1
 .global irq2
@@ -14,139 +15,169 @@
 .global irq13
 .global irq14
 .global irq15
+.global irq128
 
-# 32: IRQ0
 irq0:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x32
-    jmp irq_common_stub
+    push $0x00 
 
-# 33: IRQ1
+    push $0x20
+
+    jmp irq_common_stub
 irq1:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x33
-    jmp irq_common_stub
+    push $0x00 
 
-# 34: IRQ2
+    push $0x21
+
+    jmp irq_common_stub
 irq2:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x34
-    jmp irq_common_stub
+    push $0x00 
 
-# 35: IRQ3
+    push $0x22
+
+    jmp irq_common_stub
 irq3:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x35
+    push $0x00 
+
+    push $0x23
+
     jmp irq_common_stub
 
-# 36: IRQ4
 irq4:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x36
-    jmp irq_common_stub
+    push $0x00 
 
-# 37: IRQ5
+    push $0x24
+
+    jmp irq_common_stub
 irq5:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x37
-    jmp irq_common_stub
+    push $0x00 
 
-# 38: IRQ6
+    push $0x25
+
+    jmp irq_common_stub
 irq6:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x38
-    jmp irq_common_stub
+    push $0x00 
 
-# 39: IRQ7
+    push $0x26
+
+    jmp irq_common_stub
 irq7:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x39
+    push $0x00 
+
+    push $0x27
+
     jmp irq_common_stub
 
-# 40: IRQ8
 irq8:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x40
-    jmp irq_common_stub
+    push $0x00 
 
-# 41: IRQ9
+    push $0x28
+
+    jmp irq_common_stub
 irq9:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x32
-    jmp irq_common_stub
+    push $0x00 
 
-# 42: IRQ10
+    push $0x29
+
+    jmp irq_common_stub
 irq10:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x42
-    jmp irq_common_stub
+    push $0x00 
 
-# 43: IRQ11
+    push $0x2A
+
+    jmp irq_common_stub
 irq11:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x43
+    push $0x00 
+
+    push $0x2B
+
     jmp irq_common_stub
 
-# 44: IRQ12
 irq12:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x44
-    jmp irq_common_stub
+    push $0x00 
 
-# 45: IRQ13
+    push $0x2C
+
+    jmp irq_common_stub
 irq13:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x45
-    jmp irq_common_stub
+    push $0x00 
 
-# 46: IRQ14
+    push $0x2D
+
+    jmp irq_common_stub
 irq14:
     cli
-    push $0x00    # Note that these don't push an error code on the stack:
-                   # We need to push a dummy error code
-    push $0x46
+    push $0x00 
+
+    push $0x2E
+
     jmp irq_common_stub
-
-
-# 47: IRQ15
 irq15:
     cli
-    push $0x0
-    push $0x47
+    push $0x00 
+
+    push $0x2F
+
     jmp irq_common_stub
 
-.extern irq_handler
+irq128:
+    cli
+    jmp irq_sys
+    
 
-# This is a stub that we have created for IRQ based ISRs. This calls
-# 'irq_handler' in our C code. We need to create this in an 'irq.c'
+.extern syscall_c
+
+irq_sys:
+
+    # already on stack: ss, sp, flags, cs, ip.
+    # need to push ax, gs, fs, es, ds, -ENOSYS, bp, di, si, dx, cx, and bx
+    push %eax
+    pushl %gs
+    pushl %fs
+    pushl %es
+    pushl %ds
+    pushl $0xdead
+    push %ebp
+    push %edi
+    push %esi
+    push %edx
+    push %ecx
+    push %ebx
+    push %esp
+    call syscall_c
+    add $4, %esp
+
+    pop %ebx
+    pop %ecx
+    pop %edx
+    pop %esi
+    pop %edi
+    pop %ebp
+    add $4, %esp
+    pop %ds
+    pop %es
+    pop %fs
+    pop %gs
+    add $4, %esp
+
+    iret
+
+
+
+.extern irq_handler
 irq_common_stub:
     pusha
     push %ds
@@ -154,11 +185,11 @@ irq_common_stub:
     push %fs
     push %gs
     mov $0x10, %ax   # Load the Kernel Data Segment descriptor!
-    mov %ax, %ds 
+    mov %ax, %ds
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
-    mov %esp, %eax  # Push us the stack
+    mov %esp, %eax    # Push us the stack
     push %eax
     mov $irq_handler, %eax
     call %eax       # A special call, preserves the 'eip' register
@@ -170,4 +201,3 @@ irq_common_stub:
     popa
     add $8, %esp     # Cleans up the pushed error code and pushed ISR number
     iret           # pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP!
-		

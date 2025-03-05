@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <kernel/gdt.h>
+#include <kernel/tss.h>
 
+
+extern void flush_tss(void);
 
 struct gdt_entry
 {
@@ -23,7 +26,7 @@ struct gdt_ptr
 } __attribute__((packed));
 
 /* Our GDT, with 3 entries, and finally our special GDT pointer */
-struct gdt_entry gdt[3];
+struct gdt_entry gdt[6];
 struct gdt_ptr gp;
 
 
@@ -53,12 +56,18 @@ void gdt_install()
 {
     //clearInterrupts();
     /* Setup the GDT pointer and limit */
-    gp.limit = (sizeof(struct gdt_entry) * 3) - 1;
+    gp.limit = sizeof(gdt) - 1;
     gp.base = &gdt;
 
     gdt_set_gate(0, 0, 0, 0, 0);
     gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
     gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
+    gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFa, 0xCF);
+    gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
+    tss_install();
     /* Flush out the old GDT and install the new changes! */
     gdt_flush();
+
+	flush_tss();
+
 }
