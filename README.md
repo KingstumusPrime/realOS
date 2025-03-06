@@ -30,7 +30,7 @@ RealOS was created as hobby proejct too learn more about how computers work from
 
 * Qemu (only have tested this running the linux version)
 
-### Executing program
+### Executing the OS
 
 * run the ./qemu.sh command in the root of the project to boot the operating systems iso automatically
 * To manually run the Operating System try:
