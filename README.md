@@ -40,7 +40,7 @@ qemu-system-i386 -m 4G -cpu max -cdrom ./path/to/the/OS.iso -boot order=dc -driv
 
 ## Building
 
-In order to build this project you will first need the custom GCC toolchain found in this here [RealOS Custom toolchain](https://github.com/KingstumusPrime/RealOs-Custom-Toolchain/releases/tag/Release). After that you need to run:
+In order to build this project you will first need the custom GCC toolchain found in the releases of this repo here [RealOS Custom toolchain](https://github.com/KingstumusPrime/RealOs-Custom-Toolchain/releases/tag/Release). After that you need to run:
 ```
 export PATH="$HOME/path/to/realOS/toolchain/bin:$PATH"
 ```
