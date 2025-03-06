@@ -1,6 +1,3 @@
-![doom1](https://github.com/user-attachments/assets/0b1c7f20-7999-4016-a980-743259910a05)
-![doom](https://github.com/user-attachments/assets/4d164416-132b-4514-ac82-0c2b57e4f6f6)
-![desktop](https://github.com/user-attachments/assets/475df027-c189-4e5f-b282-e83d955f6111)
 # RealOS
 
 A POSIX compatable x86 operating system writtn in C and assembly
@@ -21,6 +18,11 @@ RealOS was created as hobby proejct too learn more about how computers work from
 * Keyboard support
 * Implentation of STDERR, STDOUT, and SDIN
 * Linux Style File Handling
+
+## Gallery
+![doom1](https://github.com/user-attachments/assets/0b1c7f20-7999-4016-a980-743259910a05)
+![doom](https://github.com/user-attachments/assets/4d164416-132b-4514-ac82-0c2b57e4f6f6)
+![desktop](https://github.com/user-attachments/assets/475df027-c189-4e5f-b282-e83d955f6111)
 
 ## Getting Started
 
